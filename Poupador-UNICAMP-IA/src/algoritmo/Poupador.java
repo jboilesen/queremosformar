@@ -1,6 +1,8 @@
 package algoritmo;
 
 import utils.Ambiente;
+import utils.Constantes;
+
 
 public class Poupador extends ProgramaPoupador {
 	private boolean contado = false;
@@ -28,4 +30,5 @@ public class Poupador extends ProgramaPoupador {
 		ambiente.contaMovimento();
 		return (int) (Math.random() * 5);
 	}
+
 }
