@@ -54,7 +54,6 @@ public class Poupador extends ProgramaPoupador {
 		// primeiro guardamos a visao
 		visao = sensor.getVisaoIdentificacao();
 		empilharMoedas();
-		// System.out.println("empilhei: " + moedasAPegar.size());
 
 		// se nao estamos na ultima rodada
 		if (ambiente.getTicsFaltantes() > 1) {
@@ -84,10 +83,34 @@ public class Poupador extends ProgramaPoupador {
 			direcaoDeMovimento = fugirLadrao();
 		}
 
-		if (direcaoDeMovimento == 0) {
-			direcaoDeMovimento = (int) (Math.random() * 5);
+		while (direcaoDeMovimento == 0) {
+			direcaoDeMovimento = (int) (Math.random() * 5 );
 		}
 		return direcaoDeMovimento;
+	}
+	
+	private boolean validarMovimento(){
+		if (direcaoDeMovimento == Mov_Acima) {
+			if(visao[7] == Ve_Moeda){ return true;}
+			if(visao[7] == Ve_Celula_vazia){ return true;}
+			if(visao[7] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+		}
+		if (direcaoDeMovimento == Mov_Baixo) {
+			if(visao[11] == Ve_Moeda){ return true;}
+			if(visao[11] == Ve_Celula_vazia){ return true;}
+			if(visao[11] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+		}
+		if (direcaoDeMovimento == Mov_Esquerda) {
+			if(visao[12] == Ve_Moeda){ return true;}
+			if(visao[12] == Ve_Celula_vazia){ return true;}
+			if(visao[12] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+		}
+		if (direcaoDeMovimento == Mov_Direita) {
+			if(visao[16] == Ve_Moeda){ return true;}
+			if(visao[16] == Ve_Celula_vazia){ return true;}
+			if(visao[16] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+		}
+		return false;
 	}
 
 	private boolean ladrao(int ponto) {
