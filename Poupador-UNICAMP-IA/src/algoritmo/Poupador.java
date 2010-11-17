@@ -40,6 +40,7 @@ public class Poupador extends ProgramaPoupador {
 	private int[] visao = null;
 	public static Ambiente ambiente = new Ambiente();
 	private ArrayList<Ponto> moedasAPegar = new ArrayList<Ponto>();
+	private int quemFoi = 0;
 
 	private int direcaoDeMovimento = 0;
 
@@ -67,6 +68,7 @@ public class Poupador extends ProgramaPoupador {
 
 		if (estouNumlabirinto()) {
 			direcaoDeMovimento = sairLabirinto();
+			quemFoi = 1;
 		}
 
 		if (!(moedasAPegar.isEmpty())) {
@@ -77,38 +79,82 @@ public class Poupador extends ProgramaPoupador {
 				moedasAPegar.remove(0);
 			}
 			direcaoDeMovimento = tentaPegarMoeda();
+			quemFoi = 2;
 		}
 
 		if (viLadrao()) {
 			direcaoDeMovimento = fugirLadrao();
+			quemFoi = 3;
 		}
 
 		while (direcaoDeMovimento == 0) {
-			direcaoDeMovimento = (int) (Math.random() * 5 );
+			direcaoDeMovimento = (int) (Math.random() * 5);
+			quemFoi = 4;
+		}
+
+		if (quemFoi == 1) {
+			System.out.println("sairLabirinto");
+		}
+		if (quemFoi == 2) {
+			System.out.println("tentaPegarMoeda");
+		}
+		if (quemFoi == 3) {
+			System.out.println("fugirLadrao");
+		}
+		if (quemFoi == 4) {
+			System.out.println("random");
 		}
 		return direcaoDeMovimento;
 	}
-	
-	private boolean validarMovimento(){
+
+	private boolean validarMovimento(int movimento) {
 		if (direcaoDeMovimento == Mov_Acima) {
-			if(visao[7] == Ve_Moeda){ return true;}
-			if(visao[7] == Ve_Celula_vazia){ return true;}
-			if(visao[7] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+			if (visao[7] == Ve_Moeda) {
+				return true;
+			}
+			if (visao[7] == Ve_Celula_vazia) {
+				return true;
+			}
+			if (visao[7] == Ve_Pastilha_do_Poder
+					&& sensor.getNumeroDeMoedas() >= 5) {
+				return true;
+			}
 		}
 		if (direcaoDeMovimento == Mov_Baixo) {
-			if(visao[11] == Ve_Moeda){ return true;}
-			if(visao[11] == Ve_Celula_vazia){ return true;}
-			if(visao[11] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+			if (visao[11] == Ve_Moeda) {
+				return true;
+			}
+			if (visao[11] == Ve_Celula_vazia) {
+				return true;
+			}
+			if (visao[11] == Ve_Pastilha_do_Poder
+					&& sensor.getNumeroDeMoedas() >= 5) {
+				return true;
+			}
 		}
 		if (direcaoDeMovimento == Mov_Esquerda) {
-			if(visao[12] == Ve_Moeda){ return true;}
-			if(visao[12] == Ve_Celula_vazia){ return true;}
-			if(visao[12] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+			if (visao[12] == Ve_Moeda) {
+				return true;
+			}
+			if (visao[12] == Ve_Celula_vazia) {
+				return true;
+			}
+			if (visao[12] == Ve_Pastilha_do_Poder
+					&& sensor.getNumeroDeMoedas() >= 5) {
+				return true;
+			}
 		}
 		if (direcaoDeMovimento == Mov_Direita) {
-			if(visao[16] == Ve_Moeda){ return true;}
-			if(visao[16] == Ve_Celula_vazia){ return true;}
-			if(visao[16] == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5 ){ return true;}
+			if (visao[16] == Ve_Moeda) {
+				return true;
+			}
+			if (visao[16] == Ve_Celula_vazia) {
+				return true;
+			}
+			if (visao[16] == Ve_Pastilha_do_Poder
+					&& sensor.getNumeroDeMoedas() >= 5) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -120,10 +166,10 @@ public class Poupador extends ProgramaPoupador {
 		}
 		return false;
 	}
-	
-	private boolean viLadrao(){
-		for(int i =0 ; i<24 ;i++){
-			if(ladrao(visao[i])){
+
+	private boolean viLadrao() {
+		for (int i = 0; i < 24; i++) {
+			if (ladrao(visao[i])) {
 				return true;
 			}
 		}
@@ -141,24 +187,27 @@ public class Poupador extends ProgramaPoupador {
 		}
 		if (direcaoDeMovimento == Mov_Baixo) {
 			if (ladrao(visao[14]) || ladrao(visao[15]) || ladrao(visao[16])
-					|| ladrao(visao[17]) || ladrao(visao[18]) || ladrao(visao[19])
-					|| ladrao(visao[20]) || ladrao(visao[21]) || ladrao(visao[22])
+					|| ladrao(visao[17]) || ladrao(visao[18])
+					|| ladrao(visao[19]) || ladrao(visao[20])
+					|| ladrao(visao[21]) || ladrao(visao[22])
 					|| ladrao(visao[23])) {
 				return Mov_Acima;
 			}
 		}
 		if (direcaoDeMovimento == Mov_Esquerda) {
 			if (ladrao(visao[0]) || ladrao(visao[1]) || ladrao(visao[5])
-					|| ladrao(visao[6]) || ladrao(visao[10]) || ladrao(visao[11])
-					|| ladrao(visao[14]) || ladrao(visao[15]) || ladrao(visao[19])
+					|| ladrao(visao[6]) || ladrao(visao[10])
+					|| ladrao(visao[11]) || ladrao(visao[14])
+					|| ladrao(visao[15]) || ladrao(visao[19])
 					|| ladrao(visao[20])) {
 				return Mov_Direita;
 			}
 		}
 		if (direcaoDeMovimento == Mov_Direita) {
 			if (ladrao(visao[3]) || ladrao(visao[4]) || ladrao(visao[8])
-					|| ladrao(visao[9]) || ladrao(visao[12]) || ladrao(visao[13])
-					|| ladrao(visao[17]) || ladrao(visao[18]) || ladrao(visao[22])
+					|| ladrao(visao[9]) || ladrao(visao[12])
+					|| ladrao(visao[13]) || ladrao(visao[17])
+					|| ladrao(visao[18]) || ladrao(visao[22])
 					|| ladrao(visao[23])) {
 				return Mov_Esquerda;
 			}
