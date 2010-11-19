@@ -36,124 +36,254 @@ public class Poupador extends ProgramaPoupador {
 	public static final int Sente_cheiro_forte = 4;
 	public static final int Sente_cheiro_muito_forte = 5;
 
-	private boolean contado = false;
 	private int[] visao = null;
 	public static Ambiente ambiente = new Ambiente();
 	private ArrayList<Ponto> moedasAPegar = new ArrayList<Ponto>();
-	private int quemFoi = 0;
-
+	private ArrayList<Integer> movimentosFazer = new ArrayList<Integer>();
 	private int direcaoDeMovimento = 0;
 
 	public int acao() {
 
-		// para sabermos quantos jogadores temos
-		if (!this.contado) {
-			ambiente.contaPoupador();
-			this.contado = true;
-		}
-
 		// primeiro guardamos a visao
 		visao = sensor.getVisaoIdentificacao();
+
+		if (visao[11] == Ve_Pastilha_do_Poder
+				&& visao[7] == Ve_Pastilha_do_Poder
+				&& visao[16] == Ve_Pastilha_do_Poder) {
+			ambiente.contaMovimento();
+			return 0;
+		}
+
 		empilharMoedas();
-
-		// se nao estamos na ultima rodada
-		if (ambiente.getTicsFaltantes() > 1) {
-			// se aproxima da moeda mais proxima
-		} else {
-			// se pegar a moeda for seguro, pega a moeda
-
-		}
-		// registra o movimento no ambiente
-		ambiente.contaMovimento();
-
-		if (estouNumlabirinto()) {
-			direcaoDeMovimento = sairLabirinto();
-			quemFoi = 1;
-		}
-
-		if (!(moedasAPegar.isEmpty())) {
-			Ponto pegar = moedasAPegar.get(0);
-
-			if (pegar.getX() == sensor.getPosicao().x
-					&& pegar.getY() == sensor.getPosicao().y) {
-				moedasAPegar.remove(0);
-			}
-			direcaoDeMovimento = tentaPegarMoeda();
-			quemFoi = 2;
-		}
 
 		if (viLadrao()) {
 			direcaoDeMovimento = fugirLadrao();
-			quemFoi = 3;
+		} else {
+			if (estouNumlabirinto()) {
+				direcaoDeMovimento = sairLabirinto();
+			} else {
+
+				if (!(moedasAPegar.isEmpty())) {
+					Ponto pegar = moedasAPegar.get(0);
+
+					if (pegar.getX() == sensor.getPosicao().x
+							&& pegar.getY() == sensor.getPosicao().y) {
+						moedasAPegar.remove(0);
+					}
+					direcaoDeMovimento = tentaPegarMoeda();
+				} else {
+					if (!movimentosFazer.isEmpty()) {
+						direcaoDeMovimento = movimentosFazer.get(0);
+						movimentosFazer.remove(0);
+					}
+				}
+			}
 		}
 
-		while (direcaoDeMovimento == 0) {
-			direcaoDeMovimento = (int) (Math.random() * 5);
-			quemFoi = 4;
+		if (direcaoDeMovimento == 0) {
+			procurarMoedas();
+			direcaoDeMovimento = irPonto(moedasAPegar.get(0));
 		}
 
-		if (quemFoi == 1) {
-			System.out.println("sairLabirinto");
+		if (!validarMovimentos(direcaoDeMovimento)) {
+			printMovimentos(direcaoDeMovimento);
+			if (movimentosFazer.isEmpty()) {
+				redecidirCaminho();
+			}
+			direcaoDeMovimento = movimentosFazer.get(0);
+			movimentosFazer.remove(0);
 		}
-		if (quemFoi == 2) {
-			System.out.println("tentaPegarMoeda");
-		}
-		if (quemFoi == 3) {
-			System.out.println("fugirLadrao");
-		}
-		if (quemFoi == 4) {
-			System.out.println("random");
-		}
+
+		// registra o movimento no ambiente
+		ambiente.contaMovimento();
 		return direcaoDeMovimento;
 	}
 
-	private boolean validarMovimento(int movimento) {
+	private void procurarMoedas() {
+		if (validarMovimento(visao[0])) {
+			moedasAPegar.add(moeda(-2, -2));
+		}
+		if (validarMovimento(visao[4])) {
+			moedasAPegar.add(moeda(2, -2));
+		}
+		if (validarMovimento(visao[19])) {
+			moedasAPegar.add(moeda(-2, 2));
+		}
+		if (validarMovimento(visao[23])) {
+			moedasAPegar.add(moeda(2, 2));
+		}
+	}
+
+	private void printMovimentos(int movimento) {
+		if (movimento == Mov_Acima) {
+			System.out.println("Mov_Acima");
+		}
+		if (movimento == Mov_Baixo) {
+			System.out.println("Mov_Baixo");
+		}
+		if (movimento == Mov_Esquerda) {
+			System.out.println("Mov_Esquerda");
+		}
+		if (movimento == Mov_Direita) {
+			System.out.println("Mov_Direita");
+		}
+		if (movimento == Mov_Parado) {
+			System.out.println("Mov_Parado");
+		}
+	}
+
+	private void redecidirCaminho() {
+		System.out.println("Redecidir recebeu ");
+		printMovimentos(direcaoDeMovimento);
 		if (direcaoDeMovimento == Mov_Acima) {
-			if (visao[7] == Ve_Moeda) {
-				return true;
+			if (validarMovimentos(Mov_Esquerda, Mov_Acima)) {
+				movimentosFazer.add(Mov_Esquerda);
+			} else if (validarMovimentos(Mov_Direita, Mov_Acima)) {
+				movimentosFazer.add(Mov_Direita);
+			} else if (validarMovimentos(Mov_Direita, Mov_Direita)) {
+				movimentosFazer.add(Mov_Direita);
+				movimentosFazer.add(Mov_Direita);
+			} else if (validarMovimentos(Mov_Esquerda, Mov_Esquerda)) {
+				movimentosFazer.add(Mov_Esquerda);
+				movimentosFazer.add(Mov_Esquerda);
 			}
-			if (visao[7] == Ve_Celula_vazia) {
-				return true;
-			}
-			if (visao[7] == Ve_Pastilha_do_Poder
-					&& sensor.getNumeroDeMoedas() >= 5) {
-				return true;
-			}
+			movimentosFazer.add(Mov_Acima);
+			return;
+
 		}
 		if (direcaoDeMovimento == Mov_Baixo) {
-			if (visao[11] == Ve_Moeda) {
-				return true;
+			if (validarMovimentos(Mov_Esquerda, Mov_Baixo)) {
+				movimentosFazer.add(Mov_Esquerda);
+			} else if (validarMovimentos(Mov_Direita, Mov_Baixo)) {
+				movimentosFazer.add(Mov_Direita);
+			} else if (validarMovimentos(Mov_Direita, Mov_Direita)) {
+				movimentosFazer.add(Mov_Direita);
+				movimentosFazer.add(Mov_Direita);
+			} else if (validarMovimentos(Mov_Esquerda, Mov_Esquerda)) {
+				movimentosFazer.add(Mov_Esquerda);
+				movimentosFazer.add(Mov_Esquerda);
 			}
-			if (visao[11] == Ve_Celula_vazia) {
-				return true;
-			}
-			if (visao[11] == Ve_Pastilha_do_Poder
-					&& sensor.getNumeroDeMoedas() >= 5) {
-				return true;
-			}
+			movimentosFazer.add(Mov_Baixo);
+			return;
 		}
 		if (direcaoDeMovimento == Mov_Esquerda) {
-			if (visao[12] == Ve_Moeda) {
-				return true;
+			if (validarMovimentos(Mov_Acima, Mov_Esquerda)) {
+				movimentosFazer.add(Mov_Acima);
+			} else if (validarMovimentos(Mov_Baixo, Mov_Esquerda)) {
+				movimentosFazer.add(Mov_Baixo);
+			} else if (validarMovimentos(Mov_Baixo, Mov_Baixo)) {
+				movimentosFazer.add(Mov_Baixo);
+				movimentosFazer.add(Mov_Baixo);
+			} else if (validarMovimentos(Mov_Acima, Mov_Acima)) {
+				movimentosFazer.add(Mov_Acima);
+				movimentosFazer.add(Mov_Acima);
 			}
-			if (visao[12] == Ve_Celula_vazia) {
-				return true;
-			}
-			if (visao[12] == Ve_Pastilha_do_Poder
-					&& sensor.getNumeroDeMoedas() >= 5) {
-				return true;
-			}
+			movimentosFazer.add(Mov_Esquerda);
+			return;
 		}
 		if (direcaoDeMovimento == Mov_Direita) {
-			if (visao[16] == Ve_Moeda) {
-				return true;
+			if (validarMovimentos(Mov_Acima, Mov_Direita)) {
+				movimentosFazer.add(Mov_Acima);
+			} else if (validarMovimentos(Mov_Baixo, Mov_Direita)) {
+				movimentosFazer.add(Mov_Baixo);
+			} else if (validarMovimentos(Mov_Baixo, Mov_Baixo)) {
+				movimentosFazer.add(Mov_Baixo);
+				movimentosFazer.add(Mov_Baixo);
+			} else if (validarMovimentos(Mov_Acima, Mov_Acima)) {
+				movimentosFazer.add(Mov_Acima);
+				movimentosFazer.add(Mov_Acima);
 			}
-			if (visao[16] == Ve_Celula_vazia) {
-				return true;
+			movimentosFazer.add(Mov_Direita);
+			return;
+		}
+		System.out.println("fiz nada");
+	}
+
+	private boolean validarMovimento(int posicao) {
+		if (posicao == Ve_Moeda) {
+			return true;
+		}
+		if (posicao == Ve_Celula_vazia) {
+			return true;
+		}
+		if (posicao == Ve_Pastilha_do_Poder && sensor.getNumeroDeMoedas() >= 5) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean validarMovimentos(int movimento) {
+		if (movimento == Mov_Acima) {
+			return validarMovimento(visao[7]);
+		}
+		if (movimento == Mov_Baixo) {
+			return validarMovimento(visao[16]);
+		}
+		if (movimento == Mov_Esquerda) {
+			return validarMovimento(visao[11]);
+		}
+		if (movimento == Mov_Direita) {
+			return validarMovimento(visao[12]);
+		}
+		return false;
+	}
+
+	private int qualCaminho(int movimento1, int movimento2) {
+		if (validarMovimentos(movimento1, movimento2)) {
+			return 1;
+		}
+		if (validarMovimentos(movimento2, movimento1)) {
+			return 2;
+		}
+		return 0;
+	}
+
+	private boolean validarMovimentos(int movimento1, int movimento2) {
+		if (movimento1 == Mov_Acima) {
+			if (movimento2 == Mov_Acima) {
+				return (validarMovimento(visao[7]) && validarMovimento(visao[2]));
 			}
-			if (visao[16] == Ve_Pastilha_do_Poder
-					&& sensor.getNumeroDeMoedas() >= 5) {
-				return true;
+			if (movimento2 == Mov_Esquerda) {
+				return (validarMovimento(visao[7]) && validarMovimento(visao[6]));
+			}
+			if (movimento2 == Mov_Direita) {
+				return (validarMovimento(visao[7]) && validarMovimento(visao[8]));
+			}
+
+		}
+		if (movimento1 == Mov_Baixo) {
+			if (movimento2 == Mov_Baixo) {
+				return (validarMovimento(visao[16]) && validarMovimento(visao[21]));
+			}
+			if (movimento2 == Mov_Esquerda) {
+				return (validarMovimento(visao[16]) && validarMovimento(visao[15]));
+			}
+			if (movimento2 == Mov_Direita) {
+				return (validarMovimento(visao[16]) && validarMovimento(visao[17]));
+			}
+
+		}
+		if (movimento1 == Mov_Esquerda) {
+			if (movimento2 == Mov_Esquerda) {
+				return (validarMovimento(visao[11]) && validarMovimento(visao[10]));
+			}
+			if (movimento2 == Mov_Acima) {
+				return (validarMovimento(visao[11]) && validarMovimento(visao[6]));
+			}
+			if (movimento2 == Mov_Baixo) {
+				return (validarMovimento(visao[11]) && validarMovimento(visao[15]));
+			}
+
+		}
+		if (movimento1 == Mov_Direita) {
+			if (movimento2 == Mov_Direita) {
+				return (validarMovimento(visao[12]) && validarMovimento(visao[13]));
+			}
+			if (movimento2 == Mov_Acima) {
+				return (validarMovimento(visao[12]) && validarMovimento(visao[8]));
+			}
+			if (movimento2 == Mov_Baixo) {
+				return (validarMovimento(visao[12]) && validarMovimento(visao[17]));
 			}
 		}
 		return false;
