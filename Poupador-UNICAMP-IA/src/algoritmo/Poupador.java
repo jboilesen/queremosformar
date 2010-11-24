@@ -15,6 +15,8 @@ public class Poupador extends ProgramaPoupador {
 	private ArrayList<Point> Moedas = new ArrayList<Point>();
 	private ArrayList<Point> Ladroes = new ArrayList<Point>();
 	private Point objetivoMaisProximo = new Point();
+	//private Point posicao = new Point();
+	private int[] olfatoPoupador = new int[4];
 	private int distanciaAteobjetivoMaisProximo = Constantes.Distancia_Desconhecida;
 	private Banco banco = new Banco();
 	private int numMoedas = 0;
@@ -88,7 +90,28 @@ public class Poupador extends ProgramaPoupador {
 				}
 			}
 		}
-		
+		if (this.Ladroes.isEmpty() && this.Moedas.isEmpty()){
+			ambiente.contaMovimento();
+			this.olfatoPoupador = sensor.getAmbienteOlfatoPoupador();
+			if (this.olfatoPoupador[1]==Constantes.Sente_cheiro_muito_forte){
+				//registra o movimento no ambiente
+				ambiente.contaMovimento();
+				return Constantes.Mov_Acima;				
+			}else if (this.olfatoPoupador[3]==Constantes.Sente_cheiro_muito_forte){
+				//registra o movimento no ambiente
+				ambiente.contaMovimento();
+				return Constantes.Mov_Esquerda;
+			}else if (this.olfatoPoupador[4]==Constantes.Sente_cheiro_muito_forte){
+				//registra o movimento no ambiente
+				ambiente.contaMovimento();
+				return Constantes.Mov_Direita;
+			}else if (this.olfatoPoupador[6]==Constantes.Sente_cheiro_muito_forte){
+				//registra o movimento no ambiente
+				ambiente.contaMovimento();
+				return Constantes.Mov_Baixo;
+			}
+			
+		}
 		//se ele estava cacando moedas e aparece algum ladrao, ele foge
 		if (this.objetivo==Constantes.pegarMoedas && !this.Ladroes.isEmpty()){
 			this.objetivo = Constantes.despistarLadroes;
@@ -304,19 +327,6 @@ public class Poupador extends ProgramaPoupador {
 				this.numMoedas++;
 				return Constantes.Mov_Baixo;
 			}				
-		}else{
-			if (visualizacao[1][2]==Constantes.Ve_Celula_vazia){
-				return Constantes.Mov_Acima;
-			}
-			if (visualizacao[2][1]==Constantes.Ve_Celula_vazia){
-				return Constantes.Mov_Esquerda;
-			}
-			if (visualizacao[2][3]==Constantes.Ve_Celula_vazia){
-				return Constantes.Mov_Direita;
-			}
-			if (visualizacao[3][2]==Constantes.Ve_Celula_vazia){
-				return Constantes.Mov_Baixo;
-			}				
 		}
 		return Constantes.Mov_Desconhecido;
 	}
@@ -360,19 +370,6 @@ public class Poupador extends ProgramaPoupador {
 					if (calculaDistancia(ponto,this.objetivoMaisProximo)<this.distanciaAteobjetivoMaisProximo){
 						return Constantes.Mov_Baixo;
 					}
-				}
-			}else{
-				if (visualizacao[3][2]==Constantes.Ve_Celula_vazia){
-					return Constantes.Mov_Baixo;
-				}
-				if (visualizacao[2][3]==Constantes.Ve_Celula_vazia){
-					return Constantes.Mov_Direita;
-				}
-				if (visualizacao[1][2]==Constantes.Ve_Celula_vazia){
-					return Constantes.Mov_Acima;
-				}
-				if (visualizacao[2][1]==Constantes.Ve_Celula_vazia){
-					return Constantes.Mov_Esquerda;
 				}
 			}
 		}
