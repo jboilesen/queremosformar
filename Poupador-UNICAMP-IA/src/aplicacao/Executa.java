@@ -1,6 +1,5 @@
 package aplicacao;
 
-import controle.Constantes;
 import gui.FramePrincipal;
 
 public class Executa {
