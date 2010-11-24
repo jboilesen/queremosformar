@@ -51,7 +51,10 @@ public class Poupador extends ProgramaPoupador {
 				}
 			}
 		}
-
+		
+		/*IMPLEMENTAR*/
+		//Aqui eh apenas um aviso importante, talvez nao ha o que implementar.
+		//Verificar se este meio de atribuicao de objetivos esta bom o suficiente
 		for (i=0;i<5;i++){
 			for (j=0;j<5;j++){
 				//se esta posicao eh uma moeda
@@ -152,18 +155,11 @@ public class Poupador extends ProgramaPoupador {
 								return Constantes.Mov_Parado;							
 							}
 						}else{
-							//se aproxima do banco
-							this.objetivoMaisProximo = this.banco.getPosicao();
-							this.distanciaAteobjetivoMaisProximo = calculaDistancia(Constantes.posicao, this.banco.getPosicao());						
-							movimento = seAproximadoObjetivo();
-							if (movimento!=Constantes.Mov_Desconhecido){
-								//registra o movimento no ambiente
-								ambiente.contaMovimento();
-								return movimento;
-							}
+							//se nao vemos o banco
+							/*IMPLEMENTAR*/
 						}
 					}else{
-						//se nao vemos o banco
+						//se temos moedas
 						/*IMPLEMENTAR*/
 					}
 				break;
