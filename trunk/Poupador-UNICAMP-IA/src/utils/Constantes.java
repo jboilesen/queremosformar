@@ -36,11 +36,11 @@ public class Constantes {
 	
 	//Percepcao olfativa
 	public static final int Sente_nenhum_cheiro = 0;
-	public static final int Sente_cheiro_muito_fraco = 1;
-	public static final int Sente_cheiro_fraco = 2;
+	public static final int Sente_cheiro_muito_fraco = 5;
+	public static final int Sente_cheiro_fraco = 4;
 	public static final int Sente_cheiro_medio = 3;
-	public static final int Sente_cheiro_forte = 4;
-	public static final int Sente_cheiro_muito_forte = 5;
+	public static final int Sente_cheiro_forte = 2;
+	public static final int Sente_cheiro_muito_forte = 1;
 
 	
 }
