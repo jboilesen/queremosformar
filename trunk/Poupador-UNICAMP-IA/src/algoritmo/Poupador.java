@@ -121,12 +121,12 @@ public class Poupador extends ProgramaPoupador {
 								//se ve moedas
 								if (!this.Moedas.isEmpty()){
 									this.distanciaAteobjetivoMaisProximo = Constantes.Distancia_Desconhecida;
-									for (Point ponto: this.Moedas){
+									for (Point moeda: this.Moedas){
 										//calcula a distancia que esta moeda esta do banco
-										dist = calculaDistancia(ponto, this.banco.getPosicao());
+										dist = calculaDistancia(moeda, this.banco.getPosicao());
 										//seta esta moeda como objetivo
 										if (dist<this.distanciaAteobjetivoMaisProximo || this.distanciaAteobjetivoMaisProximo == Constantes.Distancia_Desconhecida){
-											this.objetivoMaisProximo = ponto;
+											this.objetivoMaisProximo = moeda;
 											this.distanciaAteobjetivoMaisProximo = dist;
 										}
 									}
@@ -164,7 +164,12 @@ public class Poupador extends ProgramaPoupador {
 					}
 				break;
 				case Constantes.despistarLadroes:
-						/*IMPLEMENTAR*/
+					movimento = fugirLadrao();
+					if (movimento!=Constantes.Mov_Desconhecido){
+						//registra o movimento no ambiente
+						ambiente.contaMovimento();
+						return movimento;
+					}
 				break;
 			}
 		}else{
@@ -187,13 +192,78 @@ public class Poupador extends ProgramaPoupador {
 					}
 				break;
 				case Constantes.despistarLadroes:
-					/*IMPLEMENTAR*/
+					movimento = fugirLadrao();
+					if (movimento!=Constantes.Mov_Desconhecido){
+						//registra o movimento no ambiente
+						ambiente.contaMovimento();
+						return movimento;
+					}
 				break;
 			}
 		}
 		//registra o movimento no ambiente
 		ambiente.contaMovimento();
 		return (int) (Math.random() * 5);
+	}
+	private int fugirLadrao(){
+		boolean flag = true;
+		Point ponto = new Point();
+		if (visualizacao[1][2]==Constantes.Ve_Celula_vazia){
+			ponto.x = 2;
+			ponto.y = 1;
+			for (Point ladrao: this.Ladroes){
+				if (calculaDistancia(ponto, ladrao)<2){
+					flag = false;
+					break;
+				}
+			}
+			if (flag){
+				return Constantes.Mov_Acima;
+			}
+		}
+		flag = true;
+		if (visualizacao[2][1]==Constantes.Ve_Celula_vazia){
+			ponto.x = 1;
+			ponto.y = 2;
+			for (Point ladrao: this.Ladroes){
+				if (calculaDistancia(ponto, ladrao)<2){
+					flag = false;
+					break;
+				}
+			}
+			if (flag){
+				return Constantes.Mov_Esquerda;
+			}
+		}
+		flag = true;
+		if (visualizacao[2][3]==Constantes.Ve_Celula_vazia){
+			ponto.x = 3;
+			ponto.y = 2;
+			for (Point ladrao: this.Ladroes){
+				if (calculaDistancia(ponto, ladrao)<2){
+					flag = false;
+					break;
+				}
+			}
+			if (flag){
+				return Constantes.Mov_Direita;
+			}
+		}
+		flag = true;
+		if (visualizacao[3][2]==Constantes.Ve_Celula_vazia){
+			ponto.x = 2;
+			ponto.y = 3;
+			for (Point ladrao: this.Ladroes){
+				if (calculaDistancia(ponto, ladrao)<2){
+					flag = false;
+					break;
+				}
+			}
+			if (flag){
+				return Constantes.Mov_Baixo;
+			}
+		}
+		return Constantes.Mov_Desconhecido;
 	}
 	//tenta pegar a moeda mais proxima
 	private int chegaAoObjetivo(){
