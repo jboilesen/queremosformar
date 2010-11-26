@@ -22,7 +22,9 @@ public class Poupador extends ProgramaPoupador {
 		this.posicao.x = sensor.getPosicao().x;
 		this.posicao.y = sensor.getPosicao().y;
 		
+		/*guarda esta casa como visitada*/
 		ambiente.addCasaVisitada(posicao);
+		
 		/*se este poupador ainda nao esta contabilizado no ambiente, contabiliza ele*/
 		if (this.id==Constantes.semId){
 			this.id = ambiente.getPoupadorId(posicao);
@@ -34,7 +36,7 @@ public class Poupador extends ProgramaPoupador {
 		interpretaVisao();
 		
 		/*definindo os papéis de cada poupador*/
-		//ambiente.definirPapeis();
+		ambiente.definirPapeis();
 
 		/*definimos qual eh o papel deste poupador*/
 		if (this.id==ambiente.getDepositante()){
@@ -48,7 +50,7 @@ public class Poupador extends ProgramaPoupador {
 			case Constantes.cacador:
 				switch (this.empreitadaAtual){
 					case Constantes.catalogarMoedas:
-						//procura visitar casas nao visitadas, nao muito distante de outros poupadores
+						//procura visitar casas nao visitadas OBS: Setar numero de rodadas maximo nesta empreitada
 						movimento = catalogarMoedas();
 					break;
 					case Constantes.marcarMoeda:
@@ -56,6 +58,7 @@ public class Poupador extends ProgramaPoupador {
 					break;
 					case Constantes.fugirLadrao:
 						//se um ladrao se aproxima, procura ir para outras moedas
+						//usar a heuristica pra descobrir se um ladrao esta perto
 					break;
 				}
 			break;
@@ -139,8 +142,8 @@ public class Poupador extends ProgramaPoupador {
 		if (!ambiente.CasaVisitada(direita))
 			if (visualizacao[2][3]==Constantes.Ve_Celula_vazia)
 				return Constantes.Mov_Direita;
-		//todas as casas foram visitadas ou sao movimentos invalidos
-		//retorna algum movimento
+		/*todas as casas foram visitadas ou sao movimentos invalidos
+		entao retorna algum movimento sem ser a ultima casa em que ele estava*/
 		if (visualizacao[1][2]==Constantes.Ve_Celula_vazia)
 			if (acima.x!=this.ultimaCasa.x || acima.y!=this.ultimaCasa.y)
 				return Constantes.Mov_Acima;
@@ -280,6 +283,7 @@ public class Poupador extends ProgramaPoupador {
 							ambiente.atualizaLadrao(visualizacao[i][j], ladrao);
 						}
 					break;
+					/*Desenvolver rastreamento de casas vazias*/
 					/*case Constantes.Ve_Celula_vazia:
 						Point casa = new Point();
 						switch(i){
