@@ -20,14 +20,10 @@ public class Ambiente {
 	private int poupadorDespistador = Constantes.semId;
 	private int poupadorDepositante = Constantes.semId;
 	
-
-	public int getDespistador(){
-		return this.poupadorDespistador;
-	}
 	
-	public int getDepositante(){
-		return this.poupadorDepositante;
-	}
+	/*
+	 *  I N T E L I G E N C I A
+	 */
 	
 	/*define os papeis de cada poupador*/
 	public void definirPapeis(){
@@ -45,21 +41,22 @@ public class Ambiente {
 		segundoDepositante = Constantes.semId;
 		
 		/*para cada poupador, ve sua distancia dos ladroes*/
-		for (Point poupador:this.Poupadores){	
-			/*definindo o despistador*/
-			heuristica = heuristicaDistanciaLadroes(this.Poupadores.indexOf(poupador));
-			
-			/*ordenando para saber quem tem a maior heuristica*/
-			if (despistador==Constantes.semId){
-				despistador=this.Poupadores.indexOf(poupador);
-				despistadorHeuristica=heuristica;
-			}else{
-				if (despistadorHeuristica<heuristica){
-					despistador = this.Poupadores.indexOf(poupador);
+		for (Point poupador:this.Poupadores){
+			if (!this.Ladroes.isEmpty()){
+				/*definindo o despistador*/
+				heuristica = heuristicaDistanciaLadroes(this.Poupadores.indexOf(poupador));
+				
+				/*ordenando para saber quem tem a maior heuristica*/
+				if (despistador==Constantes.semId){
+					despistador=this.Poupadores.indexOf(poupador);
 					despistadorHeuristica=heuristica;
+				}else{
+					if (despistadorHeuristica<heuristica){
+						despistador = this.Poupadores.indexOf(poupador);
+						despistadorHeuristica=heuristica;
+					}
 				}
 			}
-			
 			/*define o depositante*/
 			if (this.bancoEncontrado()){
 				heuristica = heuristicaDistanciaBanco(this.Poupadores.indexOf(poupador));
@@ -73,6 +70,7 @@ public class Ambiente {
 				}
 			}
 		}
+		
 		/*nosso despistador nao pode ser depositante*/
 		if (despistador==depositante){
 			depositante = segundoDepositante;
@@ -83,6 +81,22 @@ public class Ambiente {
 		this.poupadorDespistador = despistador;
 	}
 	
+	/* retorna o id de quem eh despistador */
+	public int getDespistador(){
+		return this.poupadorDespistador;
+	}
+	
+	/* retorna o id do depositante */
+	public int getDepositante(){
+		return this.poupadorDepositante;
+	}
+	
+	/*se ja encontramos o banco*/
+	public boolean bancoEncontrado(){
+		return this.bancoEncontrado;
+	}
+	
+	/*calculo de Heuristica a partir da distancia do banco*/
 	public int heuristicaDistanciaBanco(int id){
 		int heuristica,distancia;
 		Point poupador = this.Poupadores.get(id);
@@ -99,7 +113,7 @@ public class Ambiente {
 		}
 		return heuristica;
 	}
-	
+	/*calculo de Heuristica a partir da distancia dos ladroes*/
 	public int heuristicaDistanciaLadroes(int id){
 		int heuristica,distancia;
 		Point poupador = this.Poupadores.get(id);
@@ -118,18 +132,17 @@ public class Ambiente {
 		}
 		return heuristica;
 	}
+	/*
+	 *  F I M   I N T E L I G E N C I A
+	 */
 	
-	public int calculaDistancia(Point pontoInicial, Point pontoFinal){
-		int distancia;
-		distancia = Math.abs(pontoFinal.x - pontoInicial.x);
-		distancia+= Math.abs(pontoFinal.y - pontoInicial.y);
-		return distancia;
-	}
-	
-	/*se ja encontramos o banco*/
-	public boolean bancoEncontrado(){
-		return this.bancoEncontrado;
-	}
+	/*
+	 * 
+	 *  M A P E A M E N T O
+	 * 
+	 * 
+	 */
+
 	/*seta posicao do banco*/
 	public void setBanco(Point banco){
 		this.Banco.x = banco.x;
@@ -167,27 +180,24 @@ public class Ambiente {
 	
 	/*atualiza ou adiciona um ladrao*/
 	public void atualizaLadrao(int id,Point posicao){
-		try{
-			this.Ladroes.get(id).x = posicao.x;
-			this.Ladroes.get(id).y = posicao.y;
-		}catch (Exception e){
-			this.Ladroes.add(new Point (posicao.x,posicao.y));
+		if (!verificaLadrao(posicao))
+			this.Ladroes.add(new Point (posicao.x,posicao.y));	
+	}
+	/*verifica se um ladrao ja esta na lista*/
+	public boolean verificaLadrao(Point posicao){
+		for (Point ladrao:this.Ladroes){
+			if (ladrao.x==posicao.x && ladrao.y==posicao.y){
+				return true;
+			}
 		}
+		return false;
 	}
-	
-	public Point getPosicaoPoupador(int id){
-		return this.Poupadores.get(id);
-	}
-	/*guarda a posicao de um poupador*/
-	public void atualizaPoupador(int id,Point posicao){
-		this.Poupadores.get(id).x = posicao.x;
-		this.Poupadores.get(id).y = posicao.y;
-	}
-	
+	/*adiciona o registro de uma casa ja visitada*/
 	public void addCasaVisitada(Point posicao){
 		if (!CasaVisitada(posicao))
 			this.CasasVisitadas.add(new Point(posicao.x,posicao.y));
 	}
+	/*verifica se uma casa ja foi visitada*/
 	public boolean CasaVisitada(Point posicao){
 		for (Point casa:this.CasasVisitadas){
 			if (posicao.x == casa.x && posicao.y==casa.y){
@@ -196,14 +206,24 @@ public class Ambiente {
 		}
 		return false;
 	}
-	
-	public Point ultimaCasa(int id){
-		return this.ultimasCasas.get(id);
-	}
+
+	/*atualiza a ultima casa de um poupador pelo id do poupador*/
 	public void atualizaUltimaCasa(int id,Point posicao){
 		this.ultimasCasas.get(id).x = posicao.x;
 		this.ultimasCasas.get(id).y = posicao.y;
 	}
+	/*retorna a ultima casa de um poupador pelo id do poupador*/
+	public Point ultimaCasa(int id){
+		return this.ultimasCasas.get(id);
+	}
+	
+	
+	/*
+	 *
+	 * Poupadores
+	 * 
+	 */
+	
 	/*metodo para dar um id ao poupador e ja conta-lo*/
 	public int getPoupadorId(Point posicao){
 		this.Poupadores.add(new Point (posicao.x,posicao.y));
@@ -215,6 +235,29 @@ public class Ambiente {
 			}
 		}
 		return Constantes.semId;
+	}
+	/*retorna a posicao do poupador pelo id*/
+	public Point getPosicaoPoupador(int id){
+		return this.Poupadores.get(id);
+	}	
+	/*guarda a posicao de um poupador*/
+	public void atualizaPoupador(int id,Point posicao){
+		this.Poupadores.get(id).x = posicao.x;
+		this.Poupadores.get(id).y = posicao.y;
+	}
+	
+	
+	
+	/*
+	 * U T I L I D A D E S
+	 * 
+	 */
+	/*metodo para calculo de distancia entre dois pontos*/
+	public int calculaDistancia(Point pontoInicial, Point pontoFinal){
+		int distancia;
+		distancia = Math.abs(pontoFinal.x - pontoInicial.x);
+		distancia+= Math.abs(pontoFinal.y - pontoInicial.y);
+		return distancia;
 	}
 	/*metodo para mantermos um controle de quantas rodadas ainda faltam*/
 	public void contaMovimento(){
