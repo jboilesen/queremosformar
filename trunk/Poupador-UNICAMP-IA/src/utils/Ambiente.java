@@ -28,17 +28,15 @@ public class Ambiente {
 		return this.bancoEncontrado;
 	}
 	
-
-	
 	/*calculo de Heuristica a partir da distancia do banco*/
 	public int heuristicaDistanciaBanco(Point ponto){
 		int heuristica,distancia;
 		heuristica = 0;
 		distancia = calculaDistancia(this.getBanco(),ponto);
 		if (distancia<=Constantes.muitoProximo){
-			heuristica+=3;
+			heuristica+=5;
 		}else if (distancia<=Constantes.proximo){
-			heuristica+=2;
+			heuristica+=3;
 		}else if (distancia<=Constantes.longe){
 			heuristica+=1;
 		}else{
