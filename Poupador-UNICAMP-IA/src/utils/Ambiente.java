@@ -17,91 +17,24 @@ public class Ambiente {
 	private int moedasAdquiridas = 0;
 	private Point Banco = new Point();
 	private boolean bancoEncontrado = false;
-	private int poupadorDespistador = Constantes.semId;
-	private int poupadorDepositante = Constantes.semId;
 	
 	
 	/*
 	 *  I N T E L I G E N C I A
 	 */
 	
-	/*define os papeis de cada poupador*/
-	public void definirPapeis(){
-		int heuristica;
-		int despistador,despistadorHeuristica;
-		int depositante,depositanteHeuristica;
-		int segundoDepositante;
-		
-		despistador = Constantes.semId;
-		despistadorHeuristica = Constantes.Distancia_Desconhecida;
-		
-		depositante = Constantes.semId;
-		depositanteHeuristica = Constantes.Distancia_Desconhecida;
-		
-		segundoDepositante = Constantes.semId;
-		
-		/*para cada poupador, ve sua distancia dos ladroes*/
-		for (Point poupador:this.Poupadores){
-			if (!this.Ladroes.isEmpty()){
-				/*definindo o despistador*/
-				heuristica = heuristicaDistanciaLadroes(this.Poupadores.indexOf(poupador));
-				
-				/*ordenando para saber quem tem a maior heuristica*/
-				if (despistador==Constantes.semId){
-					despistador=this.Poupadores.indexOf(poupador);
-					despistadorHeuristica=heuristica;
-				}else{
-					if (despistadorHeuristica<heuristica){
-						despistador = this.Poupadores.indexOf(poupador);
-						despistadorHeuristica=heuristica;
-					}
-				}
-			}
-			/*define o depositante*/
-			if (this.bancoEncontrado()){
-				heuristica = heuristicaDistanciaBanco(this.Poupadores.indexOf(poupador));
-				/*se nao temos depositante definido, ou se a heuristica deste eh maior que o do anterior*/
-				if (depositante == Constantes.semId || depositanteHeuristica<heuristica){					
-					/*guardamos o antigo depositante como segundo melhor depositante*/
-					segundoDepositante = depositante;
-					/*guardamos este depositante*/
-					depositante = this.Poupadores.indexOf(poupador);
-					depositanteHeuristica = heuristica;
-				}
-			}
-		}
-		
-		/*nosso despistador nao pode ser depositante*/
-		if (despistador==depositante){
-			depositante = segundoDepositante;
-		}
-		
-		/*definimos os papeis*/
-		this.poupadorDepositante = depositante;
-		this.poupadorDespistador = despistador;
-	}
-	
-	/* retorna o id de quem eh despistador */
-	public int getDespistador(){
-		return this.poupadorDespistador;
-	}
-	
-	/* retorna o id do depositante */
-	public int getDepositante(){
-		return this.poupadorDepositante;
-	}
-	
 	/*se ja encontramos o banco*/
 	public boolean bancoEncontrado(){
 		return this.bancoEncontrado;
 	}
 	
+
+	
 	/*calculo de Heuristica a partir da distancia do banco*/
-	public int heuristicaDistanciaBanco(int id){
+	public int heuristicaDistanciaBanco(Point ponto){
 		int heuristica,distancia;
-		Point poupador = this.Poupadores.get(id);
 		heuristica = 0;
-		distancia = calculaDistancia(this.getBanco(),poupador);
+		distancia = calculaDistancia(this.getBanco(),ponto);
 		if (distancia<=Constantes.muitoProximo){
 			heuristica+=3;
 		}else if (distancia<=Constantes.proximo){
@@ -114,16 +47,16 @@ public class Ambiente {
 		return heuristica;
 	}
 	/*calculo de Heuristica a partir da distancia dos ladroes*/
-	public int heuristicaDistanciaLadroes(int id){
+	public int heuristicaDistanciaLadroes(Point ponto){
 		int heuristica,distancia;
-		Point poupador = this.Poupadores.get(id);
+		Point poupador = new Point(ponto.x, ponto.y);
 		heuristica = 0;
 		for (Point ladrao:this.Ladroes){
 			distancia = calculaDistancia(ladrao,poupador);
 			if (distancia<=Constantes.muitoProximo){
-				heuristica+=3;
+				heuristica+=5;
 			}else if (distancia<=Constantes.proximo){
-				heuristica+=2;
+				heuristica+=3;
 			}else if (distancia<=Constantes.longe){
 				heuristica+=1;
 			}else{
@@ -131,6 +64,35 @@ public class Ambiente {
 			}
 		}
 		return heuristica;
+	}
+	public Point getMoedaMaisProxima(int id){
+		Point poupador = this.Poupadores.get(id);
+		Point moedaMaisProxima = new Point(-1,-1);
+		int distancia = Constantes.Distancia_Desconhecida;
+		
+		for (Point moeda:this.Moedas){
+			if (distancia==Constantes.Distancia_Desconhecida || calculaDistancia(poupador,moeda)<distancia){
+				moedaMaisProxima.x = moeda.x;
+				moedaMaisProxima.y = moeda.y;
+				distancia = calculaDistancia(poupador,moeda);
+			}
+		}
+		return moedaMaisProxima;
+	}
+	public Point getMoedaMaisDistante(int id){
+		Point poupador = this.Poupadores.get(id);
+		Point moedaMaisDistante = Constantes.pontoInvalido;
+		int distancia = Constantes.Distancia_Desconhecida;
+		
+		for (Point moeda:this.Moedas){
+			if (distancia==Constantes.Distancia_Desconhecida || calculaDistancia(poupador,moeda)>distancia){
+				moedaMaisDistante = new Point();
+				moedaMaisDistante.x = moeda.x;
+				moedaMaisDistante.y = moeda.y;
+				distancia = calculaDistancia(poupador,moeda);
+			}
+		}
+		return moedaMaisDistante;
 	}
 	/*
 	 *  F I M   I N T E L I G E N C I A
@@ -142,7 +104,27 @@ public class Ambiente {
 	 * 
 	 * 
 	 */
-
+	public void atualizarMapa(Point vazio){
+		int idLadrao = Constantes.semId;
+		int idMoeda = Constantes.semId;
+		
+		for (Point ladrao:this.Ladroes){
+			if (vazio.x==ladrao.x && vazio.y==ladrao.y){
+				idLadrao = this.Ladroes.indexOf(ladrao);
+				break;
+			}
+		}
+		if (idLadrao!=Constantes.semId)
+			this.Ladroes.remove(idLadrao);
+		for (Point moeda:this.Moedas){
+			if (vazio.x==moeda.x && vazio.y==moeda.y){
+				idLadrao = this.Moedas.indexOf(moeda);
+				break;
+			}
+		}
+		if (idMoeda!=Constantes.semId)
+			this.Moedas.remove(idMoeda);		
+	}
 	/*seta posicao do banco*/
 	public void setBanco(Point banco){
 		this.Banco.x = banco.x;
@@ -170,12 +152,15 @@ public class Ambiente {
 	}
 	/*remove uma moeda da lista de moedas e ja contabiliza*/
 	public void pegaMoeda(Point posicao){
+		int id = Constantes.semId;
 		for (Point moeda:this.Moedas){
 			if (moeda.x==posicao.x && moeda.y==posicao.y){
-				this.Moedas.remove(moeda);
+				id = this.Moedas.indexOf(moeda);
 				this.moedasAdquiridas++;
 			}
-		}		
+		}
+		if (id!=Constantes.semId)
+			this.Moedas.remove(id);
 	}
 	
 	/*atualiza ou adiciona um ladrao*/

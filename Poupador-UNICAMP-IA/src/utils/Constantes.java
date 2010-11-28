@@ -8,7 +8,7 @@ public class Constantes {
 	public static final Point posicaoInicial = new Point(2,2);
 	public static final int Distancia_Desconhecida = -1;
 	public static final int semId = -1;
-	
+	public static final Point pontoInvalido = new Point(-1,-1);
 	// Constantes de proximidade
 	public static final int muitoProximo = 5;
 	public static final int proximo = 10;
@@ -21,24 +21,24 @@ public class Constantes {
 	/***************/
 	public static final int depositante = 1;
 		//objetivo atual
-		public static final int buscarBanco = 1;
-		public static final int buscarMoeda = 2;
-		public static final int depositarMoeda = 3;
+		public static final int buscarBanco = 2;
+		public static final int buscarMoeda = 3;
+		public static final int depositarMoeda = 4;
 	/***************/
 	/* Despistador */
 	/***************/	
-	public static final int despistador = 2;
-		public static final int buscarLadroes = 1;
-		public static final int atrairLadroes = 2;
-		public static final int isolarLadroes = 3;
+	public static final int despistador = 5;
+		public static final int buscarLadroes = 6;
+		public static final int atrairLadroes = 7;
+		public static final int isolarLadroes = 8;
 		
 	/***************/
 	/*   Cacador   */
 	/***************/			
-	public static final int cacador = 3;
-		public static final int catalogarMoedas=1;
-		public static final int marcarMoeda=2;
-		public static final int fugirLadrao=3;
+	public static final int cacador = 9;
+		public static final int catalogarMoedas=10;
+		public static final int marcarMoeda=11;
+		public static final int fugirLadrao=12;
 	
 	// Constantes de Visao
 	public static final int Ve_Sem_visao_para_o_local = -2;
