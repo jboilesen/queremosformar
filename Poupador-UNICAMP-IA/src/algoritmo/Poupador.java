@@ -18,6 +18,7 @@ public class Poupador extends ProgramaPoupador {
 	private ArrayList<Point> caminho = new ArrayList<Point>();
 	private int moedasCarregadas = 0;
 	
+	public static boolean moedaDepositada = false; 
 	public static Ambiente ambiente = new Ambiente();
 	
 	public int acao() {
@@ -48,55 +49,60 @@ public class Poupador extends ProgramaPoupador {
 		/*definimos qual eh o papel deste poupador*/
 			
 		movimento = Constantes.Mov_Parado;
-		switch (this.papel){
-			case Constantes.cacador:
-				switch (this.empreitadaAtual){
-					case Constantes.catalogarMoedas:
-						//procura visitar casas nao visitadas OBS: Setar numero de rodadas maximo nesta empreitada
-						movimento = catalogarMoedas();
-					break;
-					case Constantes.marcarMoeda:
-						//procura guardar uma moeda ateh que se aproxime um ladrao
-						movimento = marcaMoeda();
-					break;
-					case Constantes.fugirLadrao:
-						//tenta chegar o mais proximo possivel da moeda mais distante possivel
-						movimento = BuscaMoedaMaisDistante();
-					break;
-				}
-			break;
-			/*atuacao do depositante esta OK!*/
-			case Constantes.depositante:
-				switch (this.empreitadaAtual){
-					case Constantes.buscarBanco:
-						//se aproxima do banco
-						movimento = buscarBanco();
-					break;
-					case Constantes.buscarMoeda:
-						movimento = pegarMoedaBanco();
-					break;
-					case Constantes.depositarMoeda:
-						//tenta depositar a moeda
-						movimento = depositarMoeda();
-					break;
-				}
-			break;
-			case Constantes.despistador:
-				switch (this.empreitadaAtual){
-					case Constantes.buscarLadroes:
-						//procura estar proximo aos ladroes
-						movimento = catalogarLadroes();
-					break;
-					case Constantes.atrairLadroes:
-						//procura levar os ladroes para algum lugar...se eles ficarem mtas rodadas proximos ao banco, mudar estrategia
-						movimento = catalogarMoedas();
-					break;
-					case Constantes.isolarLadroes:
-						movimento = catalogarMoedas();
-					break;
-				}
-			break;
+		
+		if (sensor.getNumeroDeMoedasBanco()>0){
+			moedaDepositada = true;
 		}
+		
+		if (!moedaDepositada)
+			switch (this.papel){
+				case Constantes.cacador:
+					switch (this.empreitadaAtual){
+						case Constantes.catalogarMoedas:
+							//procura visitar casas nao visitadas OBS: Setar numero de rodadas maximo nesta empreitada
+							movimento = catalogarMoedas();
+						break;
+						case Constantes.marcarMoeda:
+							//procura guardar uma moeda ateh que se aproxime um ladrao
+							movimento = marcaMoeda();
+						break;
+						case Constantes.fugirLadrao:
+							//tenta chegar o mais proximo possivel da moeda mais distante possivel
+							movimento = BuscaMoedaMaisDistante();
+						break;
+					}
+				break;
+				/*atuacao do depositante esta OK!*/
+				case Constantes.depositante:
+					switch (this.empreitadaAtual){
+						case Constantes.buscarBanco:
+							//se aproxima do banco
+							movimento = buscarBanco();
+						break;
+						case Constantes.buscarMoeda:
+							movimento = pegarMoedaBanco();
+						break;
+						case Constantes.depositarMoeda:
+							//tenta depositar a moeda
+							movimento = depositarMoeda();
+						break;
+					}
+				break;
+				case Constantes.despistador:
+					switch (this.empreitadaAtual){
+						case Constantes.buscarLadroes:
+							//procura estar proximo aos ladroes
+							movimento = catalogarLadroes();
+						break;
+						case Constantes.atrairLadroes:
+							movimento = catalogarMoedas();
+						break;
+						case Constantes.isolarLadroes:
+							movimento = catalogarMoedas();
+						break;
+					}
+				break;
+			}
 		
 		/*corrigindo posição para gravar no ambiente*/
 		ambiente.atualizaUltimaCasa(this.id,posicao);
@@ -134,38 +140,33 @@ public class Poupador extends ProgramaPoupador {
 			case Constantes.cacador:
 				switch (this.empreitadaAtual){
 					case Constantes.catalogarMoedas:
-						if (ambiente.getTicsFaltantes()>500 || ambiente.bancoEncontrado()){
-							if (ambiente.bancoEncontrado()){
-								if (ambiente.heuristicaDistanciaLadroes(this.posicao)<Constantes.proximo){
-									this.papel = Constantes.depositante;
-									this.empreitadaAtual = Constantes.buscarBanco;
-								}else{
-									this.empreitadaAtual = Constantes.fugirLadrao;
-								}
-							}else{
-								if (ambiente.heuristicaDistanciaLadroes(this.posicao)<Constantes.proximo){
+						if (ambiente.bancoEncontrado() && ambiente.heuristicaDistanciaBanco(this.posicao)<Constantes.longe && ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+							this.papel = Constantes.depositante;
+							this.empreitadaAtual = Constantes.buscarBanco;
+						}else{
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+								if (ambiente.getTicsFaltantes()<700){
 									this.empreitadaAtual = Constantes.marcarMoeda;
 								}else{
-									this.empreitadaAtual = Constantes.fugirLadrao;
+									this.empreitadaAtual = Constantes.catalogarMoedas;
 								}
+							}else{
+								this.empreitadaAtual = Constantes.fugirLadrao;
 							}
 						}
-						//se nao encontrou o banco ou ainda nao chegou na metade do jogo continua catalogando
 					break;
 					case Constantes.marcarMoeda:
-						//se existe alguem muito proximo ele foge
-						if (ambiente.heuristicaDistanciaLadroes(this.posicao)>=Constantes.muitoProximo){
+						if (ambiente.heuristicaDistanciaLadroes(this.posicao)==Constantes.muitoProximo){
 							this.empreitadaAtual = Constantes.fugirLadrao;
 						}
-						//se nao ele continua a marcar a moeda
 					break;
 					case Constantes.fugirLadrao:
-						if (ambiente.heuristicaDistanciaLadroes(this.posicao)<Constantes.proximo){
+						if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
 							if (ambiente.bancoEncontrado()){
 								this.papel = Constantes.depositante;
 								this.empreitadaAtual = Constantes.buscarBanco;
 							}else{
-								this.empreitadaAtual = Constantes.catalogarMoedas;
+								this.empreitadaAtual = Constantes.marcarMoeda;
 							}
 						}else{
 							this.papel = Constantes.despistador;
@@ -177,37 +178,48 @@ public class Poupador extends ProgramaPoupador {
 			case Constantes.despistador:
 				switch (this.empreitadaAtual){
 					case Constantes.buscarLadroes:
-						if (ambiente.heuristicaDistanciaLadroes(this.posicao)<Constantes.muitoProximo){
-							if (ambiente.bancoEncontrado()){
+						if (ambiente.bancoEncontrado()){
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
 								this.papel = Constantes.depositante;
 								this.empreitadaAtual = Constantes.buscarBanco;
 							}else{
-								this.papel = Constantes.cacador;
-								this.empreitadaAtual = Constantes.marcarMoeda;
+								this.empreitadaAtual = Constantes.atrairLadroes;
 							}
 						}else{
-							this.empreitadaAtual = Constantes.atrairLadroes;
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+								this.papel = Constantes.cacador;
+								this.empreitadaAtual = Constantes.marcarMoeda;
+							}							
 						}
 					break;
 					case Constantes.atrairLadroes:
-						if (ambiente.heuristicaDistanciaBanco(this.posicao)>=Constantes.proximo){
-							this.empreitadaAtual = Constantes.isolarLadroes;
-						}else{
-							if (ambiente.heuristicaDistanciaBanco(this.posicao)<Constantes.muitoProximo){
-								if (ambiente.bancoEncontrado()){
-									this.papel = Constantes.depositante;
-									this.empreitadaAtual = Constantes.buscarBanco;
-								}else{
-									this.papel = Constantes.cacador;
-									this.empreitadaAtual = Constantes.marcarMoeda;
-								}							
+						if (ambiente.bancoEncontrado()){
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+								this.papel = Constantes.depositante;
+								this.empreitadaAtual = Constantes.buscarBanco;
+							}else{
+								this.empreitadaAtual = Constantes.atrairLadroes;
 							}
+						}else{
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+								this.papel = Constantes.cacador;
+								this.empreitadaAtual = Constantes.marcarMoeda;
+							}							
 						}
 					break;
 					case Constantes.isolarLadroes:
-						if (ambiente.heuristicaDistanciaLadroes(this.posicao)<Constantes.proximo){
-							this.papel = Constantes.cacador;
-							this.empreitadaAtual = Constantes.fugirLadrao;
+						if (ambiente.bancoEncontrado()){
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+								this.papel = Constantes.depositante;
+								this.empreitadaAtual = Constantes.buscarBanco;
+							}else{
+								this.empreitadaAtual = Constantes.atrairLadroes;
+							}
+						}else{
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+								this.papel = Constantes.cacador;
+								this.empreitadaAtual = Constantes.marcarMoeda;
+							}							
 						}
 					break;
 				}
@@ -215,12 +227,12 @@ public class Poupador extends ProgramaPoupador {
 			case Constantes.depositante:
 				switch (this.empreitadaAtual){
 					case Constantes.buscarBanco:
-						if (ambiente.heuristicaDistanciaBanco(this.posicao)<Constantes.longe){
-							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo){
+						if (ambiente.heuristicaDistanciaLadroes(this.posicao)==Constantes.muitoProximo){
+							this.papel=Constantes.cacador;
+							this.empreitadaAtual = Constantes.fugirLadrao;
+						}else{
+							if (ambiente.heuristicaDistanciaBanco(this.posicao)==Constantes.muitoProximo){
 								this.empreitadaAtual = Constantes.buscarMoeda;
-							}else{
-								this.papel = Constantes.cacador;
-								this.empreitadaAtual = Constantes.fugirLadrao;
 							}
 						}
 					break;
@@ -228,14 +240,13 @@ public class Poupador extends ProgramaPoupador {
 						if (this.moedasCarregadas>0){
 							this.empreitadaAtual = Constantes.depositarMoeda;
 						}else{
-							if (ambiente.heuristicaDistanciaLadroes(this.posicao)>=Constantes.muitoProximo){
+							if (ambiente.heuristicaDistanciaLadroes(this.posicao)==Constantes.muitoProximo){
 								this.papel = Constantes.cacador;
 								this.empreitadaAtual = Constantes.fugirLadrao;
 							}
 						}
 					break;
 					case Constantes.depositarMoeda:
-						//nao muda. Nao podemos nos dar ao luxo de alguem com moeda correndo pelo mapa
 					break;
 				}
 			break;
@@ -287,7 +298,7 @@ public class Poupador extends ProgramaPoupador {
 		}
 		
 		//anda ateh o banco buscando fazer na menor distancia possivel
-		if (ambiente.heuristicaDistanciaLadroes(this.posicao)<Constantes.muitoProximo){
+
 			Point acima,abaixo,esquerda,direita;
 			int menorDist = Constantes.Distancia_Desconhecida;
 			int distAcima = Constantes.Distancia_Desconhecida;
@@ -311,21 +322,21 @@ public class Poupador extends ProgramaPoupador {
 			direita.x = this.posicao.x+1;
 			direita.y = this.posicao.y;
 			distDireita = ambiente.calculaDistancia(direita, this.moedaMarcada);
-			if (visualizacao[1][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(acima)<Constantes.muitoProximo){
+			if (visualizacao[1][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(acima)>Constantes.muitoProximo){
 				menorDist = distAcima;
 				movimento = Constantes.Mov_Acima;
 			}
-			if (visualizacao[3][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(abaixo)<Constantes.muitoProximo)
+			if (visualizacao[3][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(abaixo)>Constantes.muitoProximo)
 				if (distAbaixo<distAcima || distAcima==Constantes.Distancia_Desconhecida){
 					menorDist = distAbaixo;
 					movimento = Constantes.Mov_Baixo;
 				}
-			if (visualizacao[2][1]==movimentoValido && ambiente.heuristicaDistanciaLadroes(esquerda)<Constantes.muitoProximo)
+			if (visualizacao[2][1]==movimentoValido && ambiente.heuristicaDistanciaLadroes(esquerda)>Constantes.muitoProximo)
 				if (distEsquerda<menorDist || menorDist==Constantes.Distancia_Desconhecida){
 					menorDist = distEsquerda;
 					movimento = Constantes.Mov_Esquerda;
 				}
-			if (visualizacao[2][3]==movimentoValido && ambiente.heuristicaDistanciaLadroes(direita)<Constantes.muitoProximo)
+			if (visualizacao[2][3]==movimentoValido && ambiente.heuristicaDistanciaLadroes(direita)>Constantes.muitoProximo)
 				if (distDireita<menorDist || menorDist==Constantes.Distancia_Desconhecida){
 					menorDist = distDireita;
 					movimento = Constantes.Mov_Direita;
@@ -350,7 +361,6 @@ public class Poupador extends ProgramaPoupador {
 					menorDist = distDireita;
 					movimento = Constantes.Mov_Direita;
 				}
-		}
 		
 		return movimento;	
 	}
@@ -368,7 +378,7 @@ public class Poupador extends ProgramaPoupador {
 			movimentoValido = Constantes.Ve_Moeda;
 		}
 		//anda ateh a moeda mais proxima
-		if (ambiente.heuristicaDistanciaLadroes(this.posicao)<=Constantes.proximo && ambiente.heuristicaDistanciaBanco(this.posicao)>Constantes.longe){
+		if (ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo && ambiente.heuristicaDistanciaBanco(this.posicao)< Constantes.longe){
 			Point acima,abaixo,esquerda,direita;
 			int menorDist = Constantes.Distancia_Desconhecida;
 			int distAcima = Constantes.Distancia_Desconhecida;
@@ -393,21 +403,21 @@ public class Poupador extends ProgramaPoupador {
 			direita.y = this.posicao.y;
 			distDireita = ambiente.calculaDistancia(direita, this.moedaMarcada);
 			
-			if (visualizacao[1][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(acima)<Constantes.longe){
+			if (visualizacao[1][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(acima)>Constantes.muitoProximo){
 				menorDist = distAcima;
 				movimento = Constantes.Mov_Acima;
 			}
-			if (visualizacao[3][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(abaixo)<Constantes.longe)
+			if (visualizacao[3][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(abaixo)>Constantes.muitoProximo)
 				if (distAbaixo<distAcima || distAcima==Constantes.Distancia_Desconhecida){
 					menorDist = distAbaixo;
 					movimento = Constantes.Mov_Baixo;
 				}
-			if (visualizacao[2][1]==movimentoValido && ambiente.heuristicaDistanciaLadroes(esquerda)<Constantes.longe)
+			if (visualizacao[2][1]==movimentoValido && ambiente.heuristicaDistanciaLadroes(esquerda)>Constantes.muitoProximo)
 				if (distEsquerda<menorDist || menorDist==Constantes.Distancia_Desconhecida){
 					menorDist = distEsquerda;
 					movimento = Constantes.Mov_Esquerda;
 				}
-			if (visualizacao[2][3]==movimentoValido && ambiente.heuristicaDistanciaLadroes(direita)<Constantes.longe)
+			if (visualizacao[2][3]==movimentoValido && ambiente.heuristicaDistanciaLadroes(direita)>Constantes.muitoProximo)
 				if (distDireita<menorDist || menorDist==Constantes.Distancia_Desconhecida){
 					menorDist = distDireita;
 					movimento = Constantes.Mov_Direita;
@@ -466,21 +476,21 @@ public class Poupador extends ProgramaPoupador {
 			direita.y = this.posicao.y;
 			distDireita = ambiente.calculaDistancia(direita, banco);
 			
-			if (visualizacao[1][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(acima)<Constantes.proximo){
+			if (visualizacao[1][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(acima)>Constantes.muitoProximo){
 				menorDist = distAcima;
 				movimento = Constantes.Mov_Acima;
 			}
-			if (visualizacao[3][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(abaixo)<Constantes.proximo)
+			if (visualizacao[3][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(abaixo)>Constantes.muitoProximo)
 				if (distAbaixo<distAcima || distAcima==Constantes.Distancia_Desconhecida){
 					menorDist = distAbaixo;
 					movimento = Constantes.Mov_Baixo;
 				}
-			if (visualizacao[2][1]==movimentoValido && ambiente.heuristicaDistanciaLadroes(esquerda)<Constantes.proximo)
+			if (visualizacao[2][1]==movimentoValido && ambiente.heuristicaDistanciaLadroes(esquerda)>Constantes.muitoProximo)
 				if (distEsquerda<menorDist || menorDist==Constantes.Distancia_Desconhecida){
 					menorDist = distEsquerda;
 					movimento = Constantes.Mov_Esquerda;
 				}
-			if (visualizacao[2][3]==movimentoValido && ambiente.heuristicaDistanciaLadroes(direita)<Constantes.proximo)
+			if (visualizacao[2][3]==movimentoValido && ambiente.heuristicaDistanciaLadroes(direita)>Constantes.muitoProximo)
 				if (distDireita<menorDist || menorDist==Constantes.Distancia_Desconhecida){
 					menorDist = distDireita;
 					movimento = Constantes.Mov_Direita;
@@ -526,12 +536,12 @@ public class Poupador extends ProgramaPoupador {
 		Point moedaMaisProxima = ambiente.getMoedaMaisProxima(this.id);
 		//acha a moeda mais proxima
 		this.moedaMarcada = new Point(moedaMaisProxima.x,moedaMaisProxima.y);
-		if (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(this.posicao)<Constantes.muitoProximo ){
+		if (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo ){
 			if (ambiente.calculaDistancia(this.posicao,moedaMaisProxima)==1)
 				movimentoValido = Constantes.Ve_Moeda;
 		}		
 		//anda ateh a moeda mais proxima
-		if (ambiente.calculaDistancia(this.posicao, this.moedaMarcada)>1 || (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(posicao)<Constantes.proximo )){
+		if (ambiente.calculaDistancia(this.posicao, this.moedaMarcada)>1 || (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(posicao)>Constantes.muitoProximo )){
 			Point acima,abaixo,esquerda,direita;
 			int menorDist = Constantes.Distancia_Desconhecida;
 			int distAcima = Constantes.Distancia_Desconhecida;
@@ -543,36 +553,34 @@ public class Poupador extends ProgramaPoupador {
 			acima.x = this.posicao.x;
 			acima.y = this.posicao.y-1;
 			distAcima = ambiente.calculaDistancia(acima, this.moedaMarcada);
-			if (visualizacao[1][2]==movimentoValido){
-				menorDist = distAcima;
-				movimento = Constantes.Mov_Acima;
-			}
-			
 			abaixo = new Point();
 			abaixo.x = this.posicao.x;
 			abaixo.y = this.posicao.y+1;
 			distAbaixo = ambiente.calculaDistancia(abaixo, this.moedaMarcada);
-			if (visualizacao[3][2]==movimentoValido)
-				if (distAbaixo<distAcima || distAcima==Constantes.Distancia_Desconhecida){
-					menorDist = distAbaixo;
-					movimento = Constantes.Mov_Baixo;
-				}
-			
 			esquerda = new Point();
 			esquerda.x = this.posicao.x-1;
 			esquerda.y = this.posicao.y;
-			distEsquerda = ambiente.calculaDistancia(esquerda, this.moedaMarcada);
-			if (visualizacao[2][1]==movimentoValido)
-				if (distEsquerda<menorDist || menorDist==Constantes.Distancia_Desconhecida){
-					menorDist = distEsquerda;
-					movimento = Constantes.Mov_Esquerda;
-				}
-			
+			distEsquerda = ambiente.calculaDistancia(esquerda, this.moedaMarcada);			
 			direita = new Point();
 			direita.x = this.posicao.x+1;
 			direita.y = this.posicao.y;
 			distDireita = ambiente.calculaDistancia(direita, this.moedaMarcada);
-			if (visualizacao[2][3]==movimentoValido)
+			
+			if (visualizacao[1][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(acima)>Constantes.muitoProximo){
+				menorDist = distAcima;
+				movimento = Constantes.Mov_Acima;
+			}
+			if (visualizacao[3][2]==movimentoValido && ambiente.heuristicaDistanciaLadroes(abaixo)>Constantes.muitoProximo)
+				if (distAbaixo<distAcima || distAcima==Constantes.Distancia_Desconhecida){
+					menorDist = distAbaixo;
+					movimento = Constantes.Mov_Baixo;
+				}
+			if (visualizacao[2][1]==movimentoValido && ambiente.heuristicaDistanciaLadroes(esquerda)>Constantes.muitoProximo)
+				if (distEsquerda<menorDist || menorDist==Constantes.Distancia_Desconhecida){
+					menorDist = distEsquerda;
+					movimento = Constantes.Mov_Esquerda;
+				}
+			if (visualizacao[2][3]==movimentoValido && ambiente.heuristicaDistanciaLadroes(direita)>Constantes.muitoProximo)
 				if (distDireita<menorDist || menorDist==Constantes.Distancia_Desconhecida){
 					menorDist = distDireita;
 					movimento = Constantes.Mov_Direita;
@@ -651,13 +659,13 @@ public class Poupador extends ProgramaPoupador {
 		Point moedaMaisProxima = ambiente.getMoedaMaisDistante(this.id);
 		//acha a moeda mais proxima
 		this.moedaMarcada = new Point(moedaMaisProxima.x,moedaMaisProxima.y);
-		if (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(this.posicao)<=Constantes.proximo ){
+		if (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(this.posicao)>Constantes.muitoProximo ){
 			if (ambiente.calculaDistancia(this.posicao,moedaMaisProxima)==1)
 				movimentoValido = Constantes.Ve_Moeda;
 		}
 		
 		//anda ateh a moeda mais proxima
-		if (ambiente.calculaDistancia(this.posicao, this.moedaMarcada)>1 || (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(posicao)<=Constantes.proximo )){
+		if (ambiente.calculaDistancia(this.posicao, this.moedaMarcada)>1 || (ambiente.getTicsFaltantes()<5 && ambiente.heuristicaDistanciaLadroes(posicao)>Constantes.muitoProximo )){
 			Point acima,abaixo,esquerda,direita;
 			int menorDist = Constantes.Distancia_Desconhecida;
 			int distAcima = Constantes.Distancia_Desconhecida;
@@ -735,16 +743,16 @@ public class Poupador extends ProgramaPoupador {
 		direita.x = this.posicao.x+1;
 		direita.y = this.posicao.y;
 
-		if (!verificaCaminho(acima) && ambiente.heuristicaDistanciaLadroes(acima) > Constantes.muitoProximo)
+		if (!verificaCaminho(acima) && ambiente.heuristicaDistanciaLadroes(acima) < Constantes.proximo)
 			if (visualizacao[1][2]==Constantes.Ve_Celula_vazia)
 				return Constantes.Mov_Acima;
-		if (!verificaCaminho(abaixo) && ambiente.heuristicaDistanciaLadroes(abaixo) > Constantes.muitoProximo)
+		if (!verificaCaminho(abaixo) && ambiente.heuristicaDistanciaLadroes(abaixo) < Constantes.proximo)
 			if (visualizacao[3][2]==Constantes.Ve_Celula_vazia)
 				return Constantes.Mov_Baixo;
-		if (!verificaCaminho(esquerda) && ambiente.heuristicaDistanciaLadroes(esquerda) > Constantes.muitoProximo)
+		if (!verificaCaminho(esquerda) && ambiente.heuristicaDistanciaLadroes(esquerda) < Constantes.proximo)
 			if (visualizacao[2][1]==Constantes.Ve_Celula_vazia)
 				return Constantes.Mov_Esquerda;
-		if (!verificaCaminho(direita) && ambiente.heuristicaDistanciaLadroes(direita) > Constantes.muitoProximo)
+		if (!verificaCaminho(direita) && ambiente.heuristicaDistanciaLadroes(direita) < Constantes.proximo)
 			if (visualizacao[2][3]==Constantes.Ve_Celula_vazia)
 				return Constantes.Mov_Direita;
 		

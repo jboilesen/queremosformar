@@ -30,35 +30,29 @@ public class Ambiente {
 	
 	/*calculo de Heuristica a partir da distancia do banco*/
 	public int heuristicaDistanciaBanco(Point ponto){
-		int heuristica,distancia;
-		heuristica = 0;
+		int distancia;
 		distancia = calculaDistancia(this.getBanco(),ponto);
 		if (distancia<=Constantes.muitoProximo){
-			heuristica+=5;
+			return Constantes.muitoProximo;
 		}else if (distancia<=Constantes.proximo){
-			heuristica+=3;
+			return Constantes.proximo;
 		}else if (distancia<=Constantes.longe){
-			heuristica+=1;
+			return Constantes.longe;
 		}else{
-			heuristica+=0;
+			return Constantes.muitoLonge;
 		}
-		return heuristica;
 	}
 	/*calculo de Heuristica a partir da distancia dos ladroes*/
 	public int heuristicaDistanciaLadroes(Point ponto){
 		int heuristica,distancia;
 		Point poupador = new Point(ponto.x, ponto.y);
-		heuristica = 0;
+		heuristica = Constantes.muitoLonge;
 		for (Point ladrao:this.Ladroes){
 			distancia = calculaDistancia(ladrao,poupador);
 			if (distancia<=Constantes.muitoProximo){
-				heuristica+=5;
-			}else if (distancia<=Constantes.proximo){
-				heuristica+=3;
-			}else if (distancia<=Constantes.longe){
-				heuristica+=1;
+				return Constantes.muitoProximo;
 			}else{
-				heuristica+=0;
+				heuristica = Constantes.proximo;
 			}
 		}
 		return heuristica;

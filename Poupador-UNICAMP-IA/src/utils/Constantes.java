@@ -13,7 +13,7 @@ public class Constantes {
 	public static final int muitoProximo = 5;
 	public static final int proximo = 10;
 	public static final int longe = 15;
-	
+	public static final int muitoLonge = 20;
 	//Constantes de papeis
 
 	/***************/
